@@ -24,6 +24,13 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
+  const giteeToggle = document.getElementById("giteeToggle");
+  const giteeEnabledEl = document.getElementById("giteeEnabled");
+  const giteeTokenEl = document.getElementById("giteeToken");
+
+  let AI_GITEE_TOKEN = "";
+  let giteeEnabled = false;
+
   const MODELS = (window.APP_MODELS || [
     { id: "deepseek-ai/deepseek-v4-pro", label: "deepseek-v4-pro" },
     { id: "z-ai/glm-5.1", label: "glm-5.1" },
@@ -47,6 +54,9 @@
   const LS_PROMPT_ENABLED = "cfw_prompt_enabled";
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
 
+  const LS_GITEE_ENABLED = "cfw_gitee_enabled";
+  const LS_GITEE_TOKEN = "cfw_gitee_token";
+
     let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
 
@@ -54,6 +64,12 @@
   let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
+
+  giteeEnabled = (localStorage.getItem(LS_GITEE_ENABLED) ?? "0") === "1";
+  AI_GITEE_TOKEN = localStorage.getItem(LS_GITEE_TOKEN) || "";
+  giteeToggle.checked = giteeEnabled;
+  giteeEnabledEl.checked = giteeEnabled;
+  giteeTokenEl.value = AI_GITEE_TOKEN;
 
   function estimateTokens(text){
     if (!text) return 0;
@@ -191,12 +207,20 @@
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
 
+  giteeToggle.addEventListener("change", () => {
+    giteeEnabled = !!giteeToggle.checked;
+    giteeEnabledEl.checked = giteeEnabled;
+    localStorage.setItem(LS_GITEE_ENABLED, giteeEnabled ? "1" : "0");
+  });
+
   // Settings
   settingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "flex";
     historyKeepEl.checked = historyEnabled;
     promptKeepEl.checked = promptEnabled;
     customPromptEl.value = (localStorage.getItem(LS_CUSTOM_PROMPT) || "");
+    giteeEnabledEl.checked = giteeEnabled;
+    giteeTokenEl.value = AI_GITEE_TOKEN;
   });
   closeSettingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "none";
@@ -231,6 +255,14 @@
     const val = customPromptEl.value || "";
     if (promptEnabled) localStorage.setItem(LS_CUSTOM_PROMPT, val);
     else localStorage.removeItem(LS_CUSTOM_PROMPT);
+
+    giteeEnabled = !!giteeEnabledEl.checked;
+    AI_GITEE_TOKEN = giteeTokenEl.value.trim();
+    localStorage.setItem(LS_GITEE_ENABLED, giteeEnabled ? "1" : "0");
+    if (AI_GITEE_TOKEN) localStorage.setItem(LS_GITEE_TOKEN, AI_GITEE_TOKEN);
+    else localStorage.removeItem(LS_GITEE_TOKEN);
+    giteeToggle.checked = giteeEnabled;
+
     settingsMask.style.display = "none";
   });
   clearPromptBtn.addEventListener("click", () => {
@@ -240,12 +272,12 @@
     customPromptEl.value = "";
   });
 
-  // donate
-  function openDonate(){ donateMask.style.display = "flex"; }
-  function closeDonate(){ donateMask.style.display = "none"; }
-  donateBtn.addEventListener("click", openDonate);
-  donateClose.addEventListener("click", closeDonate);
-  donateMask.addEventListener("click", (e) => { if (e.target === donateMask) closeDonate(); });
+  // donate (disabled - element removed)
+  // function openDonate(){ donateMask.style.display = "flex"; }
+  // function closeDonate(){ donateMask.style.display = "none"; }
+  // donateBtn.addEventListener("click", openDonate);
+  // donateClose.addEventListener("click", closeDonate);
+  // donateMask.addEventListener("click", (e) => { if (e.target === donateMask) closeDonate(); });
 
   // composer
   inputEl.addEventListener("input", () => {

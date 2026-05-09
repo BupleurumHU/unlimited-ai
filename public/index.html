@@ -12,9 +12,16 @@
     <div class="topbar-shell">
       <div class="topbar-scroll" id="topbarScroll">
         <div class="topbar-inner">
-          <button class="iconbtn" id="donateBtn" title="打赏 / Donate">
+          <!-- <button class="iconbtn" id="donateBtn" title="打赏 / Donate">
             <span class="emoji">☕</span>
-          </button>
+          </button> -->
+
+          <label class="switch-wrap" title="算力广场">
+            <input type="checkbox" id="giteeToggle">
+            <span class="switch-track">
+              <span class="switch-thumb"></span>
+            </span>
+          </label>
 
           <a
             href="https://github.com/MallocPointer/unlimited-ai"
@@ -59,6 +66,20 @@
       <div id="settingsHeader">
         <h3>Settings</h3>
         <div class="hint">所有数据仅保存在本地浏览器（localStorage），不会上传</div>
+      </div>
+
+      <div class="card">
+        <h4>开关模型接入设置</h4>
+        <p>开启后，网站使用算力广场模型，下方输入你的令牌，令牌可从<a href="https://ai.gitee.com/" target="_blank">https://ai.gitee.com/</a>获取</p>
+
+        <div class="rowline">
+          <div class="toggle">
+            <input type="checkbox" id="giteeEnabled">
+            <label for="giteeEnabled">启用算力广场模型</label>
+          </div>
+        </div>
+
+        <input type="text" id="giteeToken" placeholder="请输入算力广场令牌" />
       </div>
 
       <div class="card">
