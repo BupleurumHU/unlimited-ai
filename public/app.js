@@ -350,6 +350,8 @@
         model: modelSel.value,
         use_builtin_persona: useBuiltin,
         custom_system_prompt: customPrompt,
+        use_gitee: giteeEnabled,
+        gitee_token: AI_GITEE_TOKEN,
         messages: session
       })
     });
@@ -407,7 +409,6 @@
       totalCompletionTokens += c;
 
       const tps = c / seconds;
-
       aiRow.stats.textContent =
         `Prompt: ${p} | Completion: ${c} | Total: ${t} | Speed: ${tps.toFixed(2)} tok/s | CumPrompt: ${totalPromptTokens} | CumCompletion: ${totalCompletionTokens}`;
     } else {

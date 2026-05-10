@@ -40,6 +40,12 @@ window.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL)};
 `;
 }
 
+const MODEL_MAP_GITEE = {
+  "deepseek-ai/deepseek-v4-pro": "DeepSeek-R1",
+  "z-ai/glm-5.1": "GLM-4_5",
+  "openai/gpt-oss-120b": "gpt-oss-120b"
+};
+
 async function handleChat(request, env) {
   let payload;
   try {
@@ -50,6 +56,7 @@ async function handleChat(request, env) {
 
   const requestedModel = payload?.model;
   const model = isAllowedModel(requestedModel) ? requestedModel : DEFAULT_MODEL;
+  const useGitee = payload?.use_gitee === true;
 
   const useBuiltinPersona = payload?.use_builtin_persona !== false;
   const customSystemPrompt =
@@ -82,26 +89,60 @@ async function handleChat(request, env) {
     });
   }
 
-  if (!env.NVIDIA_API_KEY) {
-    return resp(
-      "Missing NVIDIA_API_KEY (please set it with wrangler secret).",
-      "text/plain; charset=utf-8",
-      500
-    );
-  }
+  let upstream, upstreamUrl, upstreamHeaders, upstreamBody;
 
-  const upstream = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
+  if (useGitee) {
+      const giteeModel = MODEL_MAP_GITEE[model] || model;
+      console.log(`Using Gitee model ${giteeModel}`);
+    if (!payload?.gitee_token) {
+      return resp(
+        "AI_GITEE_TOKEN 不为空值，请检查设置令牌",
+        "text/plain; charset=utf-8",
+        500
+      );
+    }
+    upstreamUrl = "https://ai.gitee.com/v1/chat/completions";
+    upstreamHeaders = {
+      "Authorization": `Bearer ${payload.gitee_token}`,
+      "Content-Type": "application/json"
+    };
+    upstreamBody = {
+      model: giteeModel,
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: upstreamMessages,
+      max_tokens: 8192,
+      temperature: 0.6,
+      top_p: 0.7,
+      top_k: 50,
+      frequency_penalty: 0
+    };
+  } else {
+    console.log(`Using NVIDIA model ${model}`);
+    if (!env.NVIDIA_API_KEY) {
+      return resp(
+        "Missing NVIDIA_API_KEY (please set it with wrangler secret).",
+        "text/plain; charset=utf-8",
+        500
+      );
+    }
+    upstreamUrl = "https://integrate.api.nvidia.com/v1/chat/completions";
+    upstreamHeaders = {
       "Authorization": `Bearer ${env.NVIDIA_API_KEY}`,
       "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
+    };
+    upstreamBody = {
       model,
       stream: true,
       stream_options: { include_usage: true },
       messages: upstreamMessages
-    })
+    };
+  }
+
+  upstream = await fetch(upstreamUrl, {
+    method: "POST",
+    headers: upstreamHeaders,
+    body: JSON.stringify(upstreamBody)
   });
 
   if (!upstream.ok) {
